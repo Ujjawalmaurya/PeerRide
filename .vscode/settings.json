@@ -1,0 +1,7 @@
+{
+    "window.titleSeparator": " |",
+    "accessibility.windowTitleOptimized": true,
+    "window.title": "${dirty}${activeEditorShort}${separator}*${rootName}*$ in [${profileName}] ${separator}${appName}",
+    "workbench.editor.titleScrollbarSizing": "default",
+    "terminal.integrated.tabs.title": "${process} "
+}
