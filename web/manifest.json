@@ -1,11 +1,11 @@
 {
-    "name": "p2p_ride",
-    "short_name": "p2p_ride",
+    "name": "cab",
+    "short_name": "cab",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "Decentralised solution for peer to peer ride system in Flutter.",
+    "description": "A new Flutter project.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

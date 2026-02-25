@@ -1,16 +1,26 @@
-# p2p_ride
+# p2p_ride (Mobile App)
 
-Decentralised solution for peer to peer ride system in Flutter.
+This folder contains the Flutter mobile application for the P2P Cab system.
 
-## Getting Started
+## Features
 
-This project is a starting point for a Flutter application.
+- **Rider Interface**: Request rides and pay via the blockchain escrow.
+- **Driver Interface**: Accept and complete rides to earn fake INR.
+- **Wallet Integration**: Manage your on-chain balance.
 
-A few resources to get you started if this is your first Flutter project:
+## Setup & Running
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+1. **Install Flutter**: Ensure you have Flutter installed and configured.
+2. **Fetch Dependencies**:
+   ```bash
+   flutter pub get
+   ```
+3. **Run the App**:
+   ```bash
+   flutter run
+   ```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Configuration
+
+Update the API base URL in the app's configuration to point to your backend:
+- Default: `http://localhost:5000/api`

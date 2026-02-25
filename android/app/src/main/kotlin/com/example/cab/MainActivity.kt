@@ -1,4 +1,4 @@
-package edu.dapp.peerride.p2p_ride
+package com.example.cab
 
 import io.flutter.embedding.android.FlutterActivity
 
