@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'utils/app_logger.dart';
 import 'screens/splash_screen.dart';
 
 Future<void> main() async {
+  log.i('[APP] Starting P2P Cab...');
   await dotenv.load(fileName: '.env');
+  log.i('[APP] Environment loaded — API_URL: ${dotenv.env['API_URL']}');
   runApp(const ProviderScope(child: CabApp()));
 }
 

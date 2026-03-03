@@ -1,28 +1,45 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../utils/app_logger.dart';
 import 'auth_provider.dart';
 
 class WalletNotifier extends AsyncNotifier<int> {
   @override
   Future<int> build() async {
-    // Re-run when auth state changes (e.g. user logs in)
     final auth = ref.watch(authProvider).value;
-    if (auth?.user == null) return 0;
+    if (auth?.user == null) {
+      log.d('[WALLET] No user session — returning 0');
+      return 0;
+    }
     return _fetchBalance();
   }
 
   Future<int> _fetchBalance() async {
-    final dio = ref.read(dioProvider);
-    final response = await dio.get('/wallet/balance');
-    return int.parse(response.data['balance'].toString());
+    try {
+      log.i('[WALLET] Fetching balance...');
+      final dio = ref.read(dioProvider);
+      final response = await dio.get('wallet/balance');
+      final data = response.data;
+      if (data is Map && data.containsKey('balance')) {
+        final balance = int.parse(data['balance'].toString());
+        log.i('[WALLET] ✅ Balance: ₹$balance');
+        return balance;
+      }
+      return 0;
+    } catch (e) {
+      log.e('[WALLET] Failed to fetch balance: $e');
+      return 0;
+    }
   }
 
   Future<String> addMoney(int amount) async {
+    log.i('[WALLET] Adding ₹$amount...');
     final dio = ref.read(dioProvider);
-    final response = await dio.post('/wallet/add-money', data: {'amount': amount});
+    final response = await dio.post('wallet/add-money', data: {'amount': amount});
+    final txHash = response.data['txHash'] as String;
+    log.i('[WALLET] ✅ Added ₹$amount | txHash: $txHash');
 
-    // Refresh balance after transaction
     ref.invalidateSelf();
-    return response.data['txHash'];
+    return txHash;
   }
 }
 
