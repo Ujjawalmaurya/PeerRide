@@ -6,6 +6,9 @@ import '../providers/wallet_provider.dart';
 import 'ride_detail_screen.dart';
 import 'wallet_screen.dart';
 import 'auth_screen.dart';
+import 'admin_screen.dart';
+import 'driver_verification_screen.dart';
+import 'sos_screen.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -33,7 +36,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = ref.watch(authProvider).value;
-    final isRider = auth?.user?.role == 'rider';
+    final role = auth?.user?.role ?? 'rider';
+    final isRider = role == 'rider';
+    final isDriver = role == 'driver';
+    final isAdmin = role == 'admin';
 
     final List<Widget> riderScreens = [const RiderMapView(), const MyRidesView(), const WalletScreen()];
 
@@ -43,24 +49,159 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       const WalletScreen(),
     ];
 
-    final currentScreens = isRider ? riderScreens : driverScreens;
+    final List<Widget> adminScreens = [
+      const AdminScreen(),
+    ];
+
+    final currentScreens = isAdmin
+        ? adminScreens
+        : (isRider ? riderScreens : driverScreens);
+
+    final activeIndex = _selectedIndex >= currentScreens.length ? 0 : _selectedIndex;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(isRider ? 'Rider - P2P Cab' : 'Driver - P2P Cab'),
-        actions: [IconButton(icon: const Icon(Icons.logout), tooltip: 'Logout', onPressed: _handleLogout)],
+        title: Text(isAdmin
+            ? 'Admin Console'
+            : (isRider ? 'Rider - AmbulanceChain' : 'Driver - AmbulanceChain')),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            tooltip: 'Logout',
+            onPressed: _handleLogout,
+          )
+        ],
       ),
-      body: currentScreens[_selectedIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: (index) => setState(() => _selectedIndex = index),
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(isRider ? Icons.map : Icons.list),
-            label: isRider ? 'Book' : 'Available',
+      drawer: _buildDrawer(context, auth),
+      body: currentScreens[activeIndex],
+      floatingActionButton: (isRider && activeIndex == 0)
+          ? FloatingActionButton.extended(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SosScreen()),
+                );
+              },
+              backgroundColor: Colors.red,
+              icon: const Icon(Icons.emergency_share, color: Colors.white),
+              label: const Text('SOS EMERGENCY',
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            )
+          : null,
+      bottomNavigationBar: isAdmin
+          ? null
+          : BottomNavigationBar(
+              currentIndex: activeIndex,
+              onTap: (index) => setState(() => _selectedIndex = index),
+              items: [
+                BottomNavigationBarItem(
+                  icon: Icon(isRider ? Icons.map : Icons.list),
+                  label: isRider ? 'Book' : 'Available',
+                ),
+                const BottomNavigationBarItem(icon: Icon(Icons.history), label: 'My Rides'),
+                const BottomNavigationBarItem(icon: Icon(Icons.wallet), label: 'Wallet'),
+              ],
+            ),
+    );
+  }
+
+  Widget _buildDrawer(BuildContext context, AuthState? auth) {
+    final email = auth?.user?.email ?? 'Not logged in';
+    final role = auth?.user?.role ?? 'unknown';
+    final status = auth?.user?.verificationStatus ?? 'none';
+
+    return Drawer(
+      child: Column(
+        children: [
+          UserAccountsDrawerHeader(
+            decoration: const BoxDecoration(color: Colors.teal),
+            accountName: Text(
+              role.toUpperCase(),
+              style: const TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.0),
+            ),
+            accountEmail: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(email),
+                if (role == 'driver') ...[
+                  const SizedBox(height: 4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: status == 'approved' ? Colors.green : Colors.orange,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      'Status: ${status.toUpperCase()}',
+                      style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            currentAccountPicture: CircleAvatar(
+              backgroundColor: Colors.white,
+              child: Icon(
+                role == 'admin'
+                    ? Icons.admin_panel_settings
+                    : role == 'driver'
+                        ? Icons.local_shipping
+                        : Icons.person,
+                size: 36,
+                color: Colors.teal,
+              ),
+            ),
           ),
-          const BottomNavigationBarItem(icon: Icon(Icons.history), label: 'My Rides'),
-          const BottomNavigationBarItem(icon: Icon(Icons.wallet), label: 'Wallet'),
+          ListTile(
+            leading: const Icon(Icons.home),
+            title: const Text('Home Dashboard'),
+            onTap: () {
+              Navigator.pop(context);
+              setState(() => _selectedIndex = 0);
+            },
+          ),
+          if (role == 'rider') ...[
+            ListTile(
+              leading: const Icon(Icons.emergency, color: Colors.red),
+              title: const Text('SOS Emergency Trigger'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const SosScreen()));
+              },
+            ),
+          ],
+          if (role == 'driver') ...[
+            ListTile(
+              leading: const Icon(Icons.verified_user, color: Colors.blue),
+              title: const Text('Verification Center'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const DriverVerificationScreen()));
+              },
+            ),
+          ],
+          if (role == 'admin') ...[
+            ListTile(
+              leading: const Icon(Icons.admin_panel_settings, color: Colors.purple),
+              title: const Text('Admin Console'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminScreen()));
+              },
+            ),
+          ],
+          const Spacer(),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.logout, color: Colors.red),
+            title: const Text('Logout'),
+            onTap: () {
+              Navigator.pop(context);
+              _handleLogout();
+            },
+          ),
+          const SizedBox(height: 16),
         ],
       ),
     );
@@ -250,6 +391,52 @@ class AvailableRidesView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final auth = ref.watch(authProvider).value;
+    final status = auth?.user?.verificationStatus ?? 'none';
+
+    if (status != 'approved') {
+      return Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Icon(Icons.shield_outlined, color: Colors.orange, size: 80),
+            const SizedBox(height: 24),
+            const Text(
+              'Verification Required',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Your profile verification status is currently: ${status.toUpperCase()}.\n'
+              'You must verify your Aadhaar and Vehicle registration in the Verification Center before you can receive and accept emergency bookings.',
+              style: const TextStyle(color: Colors.grey, fontSize: 14),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 32),
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.teal,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const DriverVerificationScreen()),
+                );
+              },
+              icon: const Icon(Icons.verified_user),
+              label: const Text('Go to Verification Center', style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
+      );
+    }
+
     final rides = ref.watch(pendingRidesProvider);
     return RefreshIndicator(
       onRefresh: () async => ref.invalidate(pendingRidesProvider),

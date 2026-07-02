@@ -138,6 +138,26 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
     log.i('[AUTH] ✅ Session cleared');
     state = AsyncValue.data(AuthState());
   }
+
+  Future<void> refreshProfile() async {
+    log.i('[AUTH] Refreshing user profile...');
+    final token = await _storage.read(key: 'jwt');
+    if (token == null) {
+      log.w('[AUTH] Cannot refresh: no token');
+      return;
+    }
+
+    try {
+      final dio = ref.read(dioProvider);
+      final response = await dio.get('auth/me');
+      final user = User.fromJson(response.data);
+      await _storage.write(key: 'user', value: jsonEncode(user.toJson()));
+      log.i('[AUTH] ✅ Profile refreshed: ${user.email} (Status: ${user.verificationStatus})');
+      state = AsyncValue.data(AuthState(user: user, token: token));
+    } catch (e) {
+      log.e('[AUTH] Profile refresh failed', error: e);
+    }
+  }
 }
 
 final authProvider = AsyncNotifierProvider<AuthNotifier, AuthState>(AuthNotifier.new);

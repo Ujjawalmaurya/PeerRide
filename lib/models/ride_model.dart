@@ -10,6 +10,10 @@ class Ride {
   final String? txHash;
   final String? reserveTxHash;
   final String? releaseTxHash;
+  final double? startLat;
+  final double? startLng;
+  final double? endLat;
+  final double? endLng;
 
   Ride({
     required this.id,
@@ -23,6 +27,10 @@ class Ride {
     this.txHash,
     this.reserveTxHash,
     this.releaseTxHash,
+    this.startLat,
+    this.startLng,
+    this.endLat,
+    this.endLng,
   });
 
   factory Ride.fromJson(Map<String, dynamic> json) {
@@ -38,6 +46,10 @@ class Ride {
       txHash: json['txHash'],
       reserveTxHash: json['reserveTxHash'],
       releaseTxHash: json['releaseTxHash'],
+      startLat: (json['startLat'] as num?)?.toDouble(),
+      startLng: (json['startLng'] as num?)?.toDouble(),
+      endLat: (json['endLat'] as num?)?.toDouble(),
+      endLng: (json['endLng'] as num?)?.toDouble(),
     );
   }
 
@@ -53,5 +65,9 @@ class Ride {
     'txHash': txHash,
     'reserveTxHash': reserveTxHash,
     'releaseTxHash': releaseTxHash,
+    'startLat': startLat,
+    'startLng': startLng,
+    'endLat': endLat,
+    'endLng': endLng,
   };
 }

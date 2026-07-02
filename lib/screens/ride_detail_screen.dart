@@ -6,6 +6,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../providers/rides_provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/wallet_provider.dart';
+import 'tracking_screen.dart';
 
 class RideDetailScreen extends ConsumerWidget {
   final String rideId;
@@ -112,6 +113,23 @@ class RideDetailScreen extends ConsumerWidget {
               const SizedBox(height: 24),
 
               // Action buttons
+              if (ride.status == 'accepted' || ride.status == 'started')
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12.0),
+                  child: _ActionButton(
+                    label: 'Track Live Ambulance',
+                    icon: Icons.map,
+                    onAction: () async {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => TrackingScreen(rideId: ride.id),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+
               if (ride.status == 'pending' && auth?.user?.role == 'driver')
                 _ActionButton(
                   label: 'Accept Ride',
